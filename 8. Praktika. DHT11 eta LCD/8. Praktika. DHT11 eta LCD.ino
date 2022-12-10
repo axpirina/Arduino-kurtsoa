@@ -8,30 +8,53 @@ The Humidity is simulated by a soil humidity sensor by being mapped into percent
 
 // include the library code:
 #include <LiquidCrystal.h>
-
-const int analogIn = A0;
-int humiditysensorOutput = 0;
-// Defining Variables
-int RawValue= 0;
-double Voltage = 0;
-double tempC = 0;
-
+#include <DHT.h>
+ 
+// Definimos el pin digital donde se conecta el sensor
+#define DHTPIN 2
+// Dependiendo del tipo de sensor
+#define DHTTYPE DHT11
+ 
+// Inicializamos el sensor DHT11
+DHT dht(DHTPIN, DHTTYPE);
+ 
 // initialize the library with the numbers of the interface pins
 LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
 
 void setup() {
   // set up the LCD's number of columns and rows:
   lcd.begin(16, 2);
+   // Comenzamos el sensor DHT
+  dht.begin();
 }
 
 void loop() {
-  RawValue = analogRead(analogIn);
-  Voltage = (RawValue / 1023.0) * 5000; // 5000 to get millivots.
-  tempC = (Voltage-500) * 0.1; // 500 is the offset 
-  humiditysensorOutput = analogRead(A1);
-  humiditysensorOutput=map(humiditysensorOutput,0,921,0,100);
+  // Esperamos 5 segundos entre medidas
+  delay(2000);
+ 
+  // Leemos la humedad relativa
+  float h = dht.readHumidity();
+  // Leemos la temperatura en grados centígrados (por defecto)
+  float t = dht.readTemperature();
+  // Leemos la temperatura en grados Fahreheit
+  float f = dht.readTemperature(true);
+ 
+  // Calcular el índice de calor en grados centígrados
+  float hic = dht.computeHeatIndex(t, h, false);
+ 
+  Serial.print("Humedad: ");
+  Serial.print(h);
+  Serial.print(" %\t");
+  Serial.print("Temperatura: ");
+  Serial.print(t);
+  Serial.print(" *C ");
+  Serial.print(f);
+  Serial.print(" *F\t");
+  Serial.print("Índice de calor: ");
+  Serial.print(hic);
+  Serial.print(" *C ");
+  
 
-  delay(0);  //iterate every 5 seconds
   
   // set the cursor to column 0, line 1
   // (note: line 1 is the second row, since counting begins with 0):
